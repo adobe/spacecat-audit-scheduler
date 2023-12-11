@@ -1,3 +1,10 @@
+# 1.0.0 (2023-12-11)
+
+
+### Bug Fixes
+
+* initial setup ([2cfb429](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/2cfb42976da7042ea134495c25507718d35ea23b))
+
 # [1.2.0](https://github.com/adobe-rnd/spacecat-audit-worker/compare/v1.1.5...v1.2.0) (2023-12-10)
 
 
