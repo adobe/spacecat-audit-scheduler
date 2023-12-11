@@ -24,7 +24,7 @@ import { resolveSecretsName } from '@adobe/spacecat-shared-utils';
  */
 async function run(request, context) {
   const { log } = context;
-  log.info('Hello World');
+  log.info({ message: 'hello world', invokedAt: new Date().toISOString() });
   return new Response('', { status: 200 });
 }
 
