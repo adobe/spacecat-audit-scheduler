@@ -12,39 +12,83 @@
 
 /* eslint-env mocha */
 
-import chai from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
-import { Request } from '@adobe/fetch';
+import nock from 'nock';
+
 import { main } from '../src/index.js';
 
-chai.use(sinonChai);
-const { expect } = chai;
-
-const sandbox = sinon.createSandbox();
-
-describe('Index Tests', () => {
-  const request = new Request('https://space.cat');
-
+describe('Lambda Function Tests', () => {
   let context;
 
-  beforeEach('setup', () => {
+  beforeEach(() => {
+    // Set up a fake context
     context = {
-      log: console,
-      runtime: {
-        region: 'us-east-1',
+      env: {
+        AUDIT_ALL_LHS_TRIGGER_URL: 'http://example.com',
+        ADMIN_KEY: 'secret-api-key',
+      },
+      log: {
+        info: sinon.spy(),
+        error: sinon.spy(),
       },
     };
   });
 
-  afterEach('clean', () => {
-    sandbox.restore();
+  afterEach(() => {
+    nock.cleanAll();
+    sinon.restore();
   });
 
-  it('handles a request successfully', async () => {
-    delete context.invocation;
-    const resp = await main(request, context);
+  it('calls the endpoint successfully', async () => {
+    nock('http://example.com')
+      .get('/')
+      .reply(200);
 
-    expect(resp.status).to.equal(200);
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.info.calledOnce).to.be.true;
+    expect(response.status).to.equal(200);
+  });
+
+  it('logs an error and returns a 500 response when the endpoint URL is invalid', async () => {
+    context.env.AUDIT_ALL_LHS_TRIGGER_URL = 'invalid-url';
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+  });
+
+  it('logs an error and returns a 500 response when the API key is missing', async () => {
+    delete context.env.ADMIN_KEY;
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+  });
+
+  it('handles fetch errors gracefully', async () => {
+    nock('http://example.com')
+      .get('/')
+      .replyWithError('Network error');
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+  });
+
+  it('logs an error and returns a 500 response when the endpoint returns a non-OK response', async () => {
+    nock('http://example.com')
+      .get('/')
+      .reply(400); // Simulating a bad request response
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+    expect(await response.text()).to.equal('Error: HTTP error! status: 400');
   });
 });
