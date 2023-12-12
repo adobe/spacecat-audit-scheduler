@@ -2,19 +2,20 @@
 
 ## Overview
 
-This Lambda function is designed to trigger LHS audits by calling a specified endpoint. It is scheduled to run automatically every 24 hours via AWS EventBridge. The function uses environment variables to retrieve the endpoint URL and the necessary authentication key.
+This enhanced Lambda function is designed to trigger LHS audits by calling multiple specified endpoints. It is scheduled to run automatically every 24 hours via AWS EventBridge. The function now supports a list of endpoint URLs provided in a JSON array through an environment variable.
 
 ## Features
 
 - **Scheduled Invocation**: Automatically triggered every 24 hours by AWS EventBridge.
-- **Endpoint Call**: Calls a specified endpoint to trigger an LHS audit.
-- **Environment Variable Configuration**: Uses `AUDIT_ALL_LHS_TRIGGER_URL` for the endpoint URL and `ADMIN_KEY` for the API key.
+- **Multiple Endpoint Calls**: Calls multiple endpoints specified in a JSON array to trigger LHS audits.
+- **Environment Variable Configuration**: Uses `TRIGGER_URLS` for a list of endpoint URLs and `ADMIN_KEY` for the API key.
+- **Multi-Status Response**: Returns a detailed status for each endpoint call, indicating success or failure.
 
 ## Prerequisites
 
 - Node.js (version as per your Lambda runtime environment)
 - Access to AWS Lambda and AWS EventBridge
-- Configured environment variables: `AUDIT_ALL_LHS_TRIGGER_URL` and `ADMIN_KEY`
+- Configured environment variables: `TRIGGER_URLS` (in JSON format) and `ADMIN_KEY`
 
 ## Installation
 
@@ -45,26 +46,26 @@ The Lambda function will run automatically based on the schedule set in AWS Even
 
 ## Environment Variables
 
-- `AUDIT_ALL_LHS_TRIGGER_URL`: The URL of the endpoint to trigger the LHS audits.
-- `ADMIN_KEY`: The API key for authenticating the request to the endpoint.
+- `TRIGGER_URLS`: A JSON string containing an array of URLs of the endpoints to trigger the LHS audits.
+- `ADMIN_KEY`: The API key for authenticating requests to the endpoints.
 
 ## Testing
 
-Tests have been written using Mocha, Chai, and Nock. To run the tests, execute the following command:
+The tests have been updated to cover the new functionality using Mocha, Chai, and Nock. To run the tests, execute the following command:
 
 ```sh
 npm test
 ```
 
-Ensure that all tests pass successfully to confirm that the function behaves as expected.
+Ensure that all tests pass successfully to confirm that the function behaves as expected, particularly with multiple endpoints.
 
 ## Logging
 
-The function logs information and errors using the provided logging mechanism in the AWS Lambda environment. Check the AWS CloudWatch logs for insights into the function's execution.
+The function logs detailed information and errors using the provided logging mechanism in the AWS Lambda environment. Check the AWS CloudWatch logs for insights into the function's execution and the status of each endpoint call.
 
 ## Contributing
 
-Contributions to this project are welcome. Please follow the project's coding standards and guidelines for submitting patches and additions.
+Contributions to this project are welcome. Please adhere to the project's coding standards and guidelines for submitting patches and additions.
 
 ## License
 
