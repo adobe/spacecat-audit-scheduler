@@ -22,65 +22,69 @@ import {
 } from '@adobe/spacecat-shared-utils';
 
 /**
- * Validates the required environment variables.
+ * Parses and validates the TRIGGER_URLS environment variable.
  * @param {UniversalContext} context the context of the universal serverless function
- * @returns {boolean} true if validation is successful
+ * @returns {string[]} Array of valid URLs if parsing and validation are successful, otherwise null
  */
-function validateEnv(context) {
+function parseAndValidateTriggerUrls(context) {
   const { env, log } = context;
+  let urls;
 
-  const endpointUrl = env.AUDIT_ALL_LHS_TRIGGER_URL;
-  const apiKey = env.ADMIN_KEY;
-
-  if (!isValidUrl(endpointUrl)) {
-    log.error('AUDIT_ALL_LHS_TRIGGER_URL environment variable is missing.');
-    return false;
+  try {
+    urls = JSON.parse(env.TRIGGER_URLS);
+  } catch (error) {
+    log.error('Error parsing TRIGGER_URLS: Invalid JSON format.');
+    return null;
   }
 
-  if (!hasText(apiKey)) {
-    log.error('ADMIN_KEY environment variable is missing.');
-    return false;
+  if (!Array.isArray(urls) || urls.length === 0) {
+    log.error('TRIGGER_URLS environment variable does not contain a valid array of URLs.');
+    return null;
   }
 
-  return true;
+  if (urls.some((url) => !isValidUrl(url))) {
+    log.error('One or more URLs in TRIGGER_URLS are invalid.');
+    return null;
+  }
+
+  return urls;
 }
 
 /**
- * This is the main function. It calls the endpoint that triggers the LHS audit of all sites.
- * It is triggered by a cron job via AWS EventBridge.
- *
+ * Main Lambda function to trigger audits on multiple URLs.
  * @param {Request} request the request object
  * @param {UniversalContext} context the context of the universal serverless function
- *
  * @returns {Response} a response
  */
 async function run(request, context) {
   const { log, env } = context;
 
-  if (!validateEnv(context)) {
-    return new Response('Server misconfiguration', { status: 500 });
+  const triggerUrls = parseAndValidateTriggerUrls(context);
+  if (!triggerUrls) {
+    return new Response('Error in TRIGGER_URLS configuration', { status: 500 });
   }
 
-  const endpointUrl = env.AUDIT_ALL_LHS_TRIGGER_URL;
   const apiKey = env.ADMIN_KEY;
-
-  try {
-    const response = await fetch(endpointUrl, {
-      method: 'GET',
-      headers: { 'x-api-key': apiKey },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    log.info(`Successfully called endpoint: ${endpointUrl} with status: ${response.status}`);
-
-    return new Response('Endpoint called successfully', { status: 200 });
-  } catch (error) {
-    log.error({ message: `Error calling endpoint: ${error.message}`, invokedAt: new Date().toISOString() });
-    return new Response(`Error: ${error.message}`, { status: 500 });
+  if (!hasText(apiKey)) {
+    log.error('ADMIN_KEY environment variable is missing.');
+    return new Response('Missing ADMIN_KEY', { status: 500 });
   }
+
+  const fetchPromises = triggerUrls.map((url) => fetch(url, {
+    method: 'GET',
+    headers: { 'x-api-key': apiKey },
+  }).then((response) => ({
+    url,
+    status: response.ok ? 'Success' : `Failed - HTTP status: ${response.status}`,
+  })).catch((error) => ({
+    url,
+    status: `Failed - Error: ${error.message}`,
+  })));
+
+  const results = await Promise.all(fetchPromises);
+
+  log.info('Endpoint call results:', results);
+  return new Response(JSON.stringify(results), { status: 200 });
 }
 
 export const main = wrap(run)

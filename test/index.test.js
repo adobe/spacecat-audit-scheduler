@@ -25,7 +25,7 @@ describe('Lambda Function Tests', () => {
     // Set up a fake context
     context = {
       env: {
-        AUDIT_ALL_LHS_TRIGGER_URL: 'http://example.com',
+        TRIGGER_URLS: JSON.stringify(['http://example.com', 'http://example.org']),
         ADMIN_KEY: 'secret-api-key',
       },
       log: {
@@ -40,19 +40,62 @@ describe('Lambda Function Tests', () => {
     sinon.restore();
   });
 
-  it('calls the endpoint successfully', async () => {
-    nock('http://example.com')
-      .get('/')
-      .reply(200);
+  it('calls all endpoints successfully', async () => {
+    nock('http://example.com').get('/').reply(200);
+    nock('http://example.org').get('/').reply(200);
 
     const response = await main({ /* Request object */ }, context);
+    const results = await response.json();
 
     expect(context.log.info.calledOnce).to.be.true;
+    expect(results).to.be.an('array').that.has.lengthOf(2);
+    expect(results[0].status).to.equal('Success');
+    expect(results[1].status).to.equal('Success');
     expect(response.status).to.equal(200);
   });
 
-  it('logs an error and returns a 500 response when the endpoint URL is invalid', async () => {
-    context.env.AUDIT_ALL_LHS_TRIGGER_URL = 'invalid-url';
+  it('logs an error and returns a 500 response when TRIGGER_URLS is empty', async () => {
+    context.env.TRIGGER_URLS = JSON.stringify([]);
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+  });
+
+  it('logs an error and returns a 500 response when TRIGGER_URLS is non-array', async () => {
+    context.env.TRIGGER_URLS = '"http://example.com"';
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+  });
+
+  it('handles mixed success and failure of endpoints', async () => {
+    nock('http://example.com').get('/').reply(200);
+    nock('http://example.org').get('/').reply(400);
+
+    const response = await main({ /* Request object */ }, context);
+    const results = await response.json();
+
+    expect(context.log.info.calledOnce).to.be.true;
+    expect(results[0].status).to.equal('Success');
+    expect(results[1].status).to.include('Failed - HTTP status: 400');
+    expect(response.status).to.equal(200);
+  });
+
+  it('handles invalid JSON in TRIGGER_URLS environment variable', async () => {
+    context.env.TRIGGER_URLS = 'invalid-json';
+
+    const response = await main({ /* Request object */ }, context);
+
+    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(500);
+  });
+
+  it('logs an error and returns a 500 response when TRIGGER_URLS contains invalid URLs', async () => {
+    context.env.TRIGGER_URLS = JSON.stringify(['http:// invalid-url']);
 
     const response = await main({ /* Request object */ }, context);
 
@@ -69,26 +112,16 @@ describe('Lambda Function Tests', () => {
     expect(response.status).to.equal(500);
   });
 
-  it('handles fetch errors gracefully', async () => {
-    nock('http://example.com')
-      .get('/')
-      .replyWithError('Network error');
+  it('handles network errors gracefully', async () => {
+    nock('http://example.com').get('/').replyWithError('Network error');
+    nock('http://example.org').get('/').reply(200);
 
     const response = await main({ /* Request object */ }, context);
+    const results = await response.json();
 
-    expect(context.log.error.calledOnce).to.be.true;
-    expect(response.status).to.equal(500);
-  });
-
-  it('logs an error and returns a 500 response when the endpoint returns a non-OK response', async () => {
-    nock('http://example.com')
-      .get('/')
-      .reply(400); // Simulating a bad request response
-
-    const response = await main({ /* Request object */ }, context);
-
-    expect(context.log.error.calledOnce).to.be.true;
-    expect(response.status).to.equal(500);
-    expect(await response.text()).to.equal('Error: HTTP error! status: 400');
+    expect(context.log.info.calledOnce).to.be.true;
+    expect(results[0].status).to.include('Failed - Error: Network error');
+    expect(results[1].status).to.equal('Success');
+    expect(response.status).to.equal(200);
   });
 });
