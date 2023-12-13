@@ -75,9 +75,10 @@ function createRequestOptions(type, baseUrl) {
  * @param {string} requestOptions.url - The URL to call.
  * @param {string} requestOptions.method - The HTTP method.
  * @param {string} apiKey - The API key.
+ * @param {object} log - The logger.
  * @return {Promise<Response>} - The response from the API.
  */
-async function fetchData(requestOptions, apiKey) {
+async function fetchData(requestOptions, apiKey, log) {
   const { url, method } = requestOptions;
 
   const options = {
@@ -86,6 +87,8 @@ async function fetchData(requestOptions, apiKey) {
       'x-api-key': apiKey,
     },
   };
+
+  log.info('Sending request', { url, method, apiKey });
 
   return fetch(createUrl(url), options);
 }
@@ -126,7 +129,7 @@ async function run(request, context) {
     }
 
     const requestOptions = createRequestOptions(type, env.API_BASE_URL);
-    const response = await fetchData(requestOptions, env.API_AUTH_KEY);
+    const response = await fetchData(requestOptions, env.API_AUTH_KEY, log);
     if (!response.ok) {
       log.error(`Request failed: ${response.status}`, { statusText: response.statusText });
       return new Response('', { status: 500 });
