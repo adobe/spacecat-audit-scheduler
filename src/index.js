@@ -121,6 +121,9 @@ function validateConfiguration(env) {
 async function run(request, context) {
   const { data: payload, env, log } = context;
 
+  log.info(JSON.stringify(request));
+  log.info(JSON.stringify(context));
+
   try {
     validateConfiguration(env);
 
