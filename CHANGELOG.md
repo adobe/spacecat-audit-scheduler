@@ -1,3 +1,22 @@
+# [1.1.0](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.0.0...v1.1.0) (2023-12-13)
+
+
+### Bug Fixes
+
+* add readme ([ae19d88](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/ae19d88814d028241a25d7dcdb66a9b14a0baf49))
+* adjust to event being JSON ([78c77e2](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/78c77e2679125383fa9f832ad35a27b7413b7d4a))
+* adjust to invocation event ([f75139a](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/f75139afca46e5d6455bc0a8d9fb81a71b7318d3))
+* call /trigger path ([24c2c39](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/24c2c39c90775363695eff9a81638ea36c43d727))
+* hide api key from log ([b717124](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/b7171249aec1d61cdea7b52ca9445f465a59c4c6))
+* log test ([9174948](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/9174948c7673b03436570bc7d102eab42e76499e))
+* support multiple trigger URLs ([4d43460](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/4d434606ca0e6bbeb57baf1adbdddc02d1614531))
+* trigger url ([1d17bf1](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/1d17bf18b11ec0e5c714de9f37ded842d13a9140))
+
+
+### Features
+
+* event-driven type ([b33ee39](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/b33ee39975eb5291d03fa091ea913baf395e60c8))
+
 # 1.0.0 (2023-12-11)
 
 
