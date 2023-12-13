@@ -88,7 +88,7 @@ async function fetchData(requestOptions, apiKey, log) {
     },
   };
 
-  log.info('Sending request', { url, method, apiKey });
+  log.info('Sending request', { url, method });
 
   return fetch(createUrl(url), options);
 }
