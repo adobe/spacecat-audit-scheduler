@@ -60,7 +60,7 @@ describe('Audit Scheduler Tests', () => {
   it('successfully makes an OPTIONS request when type is test', async () => {
     context.invocation.event = { type: 'test' };
     nock(env.API_BASE_URL)
-      .options('')
+      .options('/trigger')
       .reply(200);
 
     const response = await lambdaFunction({ /* Request options */ }, context);

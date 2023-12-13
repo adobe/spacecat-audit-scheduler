@@ -61,9 +61,9 @@ function getTypeFromEvent(event, log) {
  * @return {{method: (string), url: (string)}}
  */
 function createRequestOptions(type, baseUrl) {
-  let url = baseUrl;
+  let url = `${baseUrl}/trigger`;
   if (type !== 'test') {
-    url = `${baseUrl}/trigger?type=${type}&url=all`;
+    url = `${url}?type=${type}&url=all`;
   }
   const method = type === 'test' ? 'OPTIONS' : 'GET';
   return { url, method };
