@@ -1,72 +1,88 @@
 # SpaceCat Audit Scheduler
+Below is a comprehensive README that includes details about your Lambda function and guidance on configuring an AWS EventBridge Rule to trigger it:
 
-## Overview
+---
 
-This enhanced Lambda function is designed to trigger LHS audits by calling multiple specified endpoints. It is scheduled to run automatically every 24 hours via AWS EventBridge. The function now supports a list of endpoint URLs provided in a JSON array through an environment variable.
+# Lambda Function for Event-Driven Processing
 
-## Features
+This project contains a Lambda function designed to be triggered by AWS EventBridge rules. The function processes events based on a given payload and interacts with an API endpoint using predefined types.
 
-- **Scheduled Invocation**: Automatically triggered every 24 hours by AWS EventBridge.
-- **Multiple Endpoint Calls**: Calls multiple endpoints specified in a JSON array to trigger LHS audits.
-- **Environment Variable Configuration**: Uses `TRIGGER_URLS` for a list of endpoint URLs and `ADMIN_KEY` for the API key.
-- **Multi-Status Response**: Returns a detailed status for each endpoint call, indicating success or failure.
+## Function Overview
 
-## Prerequisites
+The Lambda function validates and processes payloads received from EventBridge. It supports a set of predefined types and makes either a GET or OPTIONS request to a configured API endpoint based on the event's type.
 
-- Node.js (version as per your Lambda runtime environment)
-- Access to AWS Lambda and AWS EventBridge
-- Configured environment variables: `TRIGGER_URLS` (in JSON format) and `ADMIN_KEY`
+### Key Features
 
-## Installation
+- Payload validation and parsing.
+- Dynamic request type handling (`GET` or `OPTIONS`).
+- Environment-based configuration for API endpoint and authentication.
+- Comprehensive error handling and logging.
 
-1. **Clone the repository:**
+## Setup and Configuration
 
-   ```sh
-   git clone [repository-url]
-   cd [repository-directory]
-   ```
+### Prerequisites
 
-2. **Install dependencies:**
+- Node.js
+- AWS CLI (configured with appropriate permissions)
+- Access to an AWS account
 
-   ```sh
-   npm install
-   ```
+### Deployment
 
-3. **Deploy to AWS Lambda:**
+1. **Deploy the Lambda Function**: Use AWS Lambda console or AWS CLI to deploy the function to your AWS environment.
 
-   Use `npm run deploy` to deploy the function to AWS Lambda.
+2. **Set Environment Variables**: Configure `API_BASE_URL` and `API_AUTH_KEY` in the Lambda function's environment settings.
 
-4. **Configure AWS EventBridge:**
+### Running Tests
 
-   Set up a rule to trigger this Lambda function every 24 hours.
+Run the test suite to ensure everything is functioning correctly:
 
-## Usage
-
-The Lambda function will run automatically based on the schedule set in AWS EventBridge. It does not require manual intervention unless there is a need to update the environment variables or the function code.
-
-## Environment Variables
-
-- `TRIGGER_URLS`: A JSON string containing an array of URLs of the endpoints to trigger the LHS audits.
-- `ADMIN_KEY`: The API key for authenticating requests to the endpoints.
-
-## Testing
-
-The tests have been updated to cover the new functionality using Mocha, Chai, and Nock. To run the tests, execute the following command:
-
-```sh
+```bash
+npm install
 npm test
 ```
 
-Ensure that all tests pass successfully to confirm that the function behaves as expected, particularly with multiple endpoints.
+## AWS EventBridge Rule Configuration
 
-## Logging
+To trigger this Lambda function using AWS EventBridge, you'll need to set up a rule. Below is an example CloudFormation template to configure an EventBridge rule.
 
-The function logs detailed information and errors using the provided logging mechanism in the AWS Lambda environment. Check the AWS CloudWatch logs for insights into the function's execution and the status of each endpoint call.
+### CloudFormation Template
 
-## Contributing
+```yaml
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template for EventBridge rule 'spacecat-audit-trigger-test-dev'"
 
-Contributions to this project are welcome. Please adhere to the project's coding standards and guidelines for submitting patches and additions.
+Resources:
+  EventRule0:
+    Type: "AWS::Events::Rule"
+    Properties:
+      EventBusName: "default"
+      Name: "spacecat-audit-trigger-test-dev"
+      ScheduleExpression: "cron(*/5 * * * ? *)"
+      State: "ENABLED"
+      Targets:
+        - Id: "rrl0zj4vhh2w3xtvp0ke"
+          Arn: "arn:aws:lambda:us-east-1:282898975672:function:spacecat-services--audit-scheduler:ci"
+          Input: "{\n  \"type\": \"test\"\n}"
+```
+
+This template sets up a rule named `spacecat-audit-trigger-test-dev` that triggers every 5 minutes and invokes the specified Lambda function with a payload containing `{ "type": "test" }`.
+
+### Deploying the Rule
+
+To deploy this rule:
+
+1. Save the above template to a file, e.g., `eventbridge-rule.yaml`.
+2. Use the AWS CLI to deploy the template:
+
+   ```bash
+   aws cloudformation deploy --template-file eventbridge-rule.yaml --stack-name my-stack-name
+   ```
+
+3. Verify the rule in the AWS EventBridge console.
+
+## Support and Contributions
+
+For support, issues, or enhancements, please open an issue in the repository. Contributions to this project are welcome via pull requests.
 
 ## License
-
-Apache 2.0
+Apache-2.0
