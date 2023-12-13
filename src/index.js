@@ -12,79 +12,137 @@
 
 import wrap from '@adobe/helix-shared-wrap';
 import { helixStatus } from '@adobe/helix-status';
-import { Response, fetch } from '@adobe/fetch';
-import secrets from '@adobe/helix-shared-secrets';
-
 import {
-  hasText,
-  isValidUrl,
-  resolveSecretsName,
-} from '@adobe/spacecat-shared-utils';
+  context as h2,
+  h1,
+  createUrl,
+  Response,
+} from '@adobe/fetch';
+import secrets from '@adobe/helix-shared-secrets';
+import { isObject, resolveSecretsName } from '@adobe/spacecat-shared-utils';
+
+const SUPPORTED_TYPES = ['cwv', '404', 'lhs', 'test'];
+
+/* c8 ignore next 3 */
+export const { fetch } = process.env.HELIX_FETCH_FORCE_HTTP1
+  ? h1()
+  : h2();
 
 /**
- * Parses and validates the TRIGGER_URLS environment variable.
- * @param {UniversalContext} context the context of the universal serverless function
- * @returns {string[]} Array of valid URLs if parsing and validation are successful, otherwise null
+ * Validates the type. The type must be one of the supported types.
+ * @param {string} type - The type.
+ * @return {boolean} - True if the type is supported, false otherwise.
  */
-function parseAndValidateTriggerUrls(context) {
-  const { env, log } = context;
-  let urls;
-
-  try {
-    urls = JSON.parse(env.TRIGGER_URLS);
-  } catch (error) {
-    log.error('Error parsing TRIGGER_URLS: Invalid JSON format.');
-    return null;
-  }
-
-  if (!Array.isArray(urls) || urls.length === 0) {
-    log.error('TRIGGER_URLS environment variable does not contain a valid array of URLs.');
-    return null;
-  }
-
-  if (urls.some((url) => !isValidUrl(url))) {
-    log.error('One or more URLs in TRIGGER_URLS are invalid.');
-    return null;
-  }
-
-  return urls;
+function validateType(type) {
+  return SUPPORTED_TYPES.includes(type);
 }
 
 /**
- * Main Lambda function to trigger audits on multiple URLs.
- * @param {Request} request the request object
- * @param {UniversalContext} context the context of the universal serverless function
- * @returns {Response} a response
+ * Parses the payload and returns the type. If the payload is invalid,
+ * then null is returned.
+ * @param {string} rawPayload - The request body.
+ * @param {object} log - The logger.
+ * @return {string|null} - The type if the payload is valid, null otherwise.
+ */
+function parsePayload(rawPayload, log) {
+  try {
+    const payload = JSON.parse(rawPayload || '{}');
+    if (!isObject(payload)) {
+      log.error(`Invalid payload: ${payload}`);
+      return null;
+    }
+    return payload.type;
+  } catch (error) {
+    log.error(`Error parsing payload: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Creates the request options for the fetch call. If the type is test,
+ * then the request is an OPTIONS request. Otherwise, the type is appended
+ * as a query parameter.
+ * @param {string} type - The type of request.
+ * @param {string} baseUrl - The base URL to call.
+ * @return {{method: (string), url: (string)}}
+ */
+function createRequestOptions(type, baseUrl) {
+  let url = baseUrl;
+  if (type !== 'test') {
+    url = `${baseUrl}?type=${type}&url=all`;
+  }
+  const method = type === 'test' ? 'OPTIONS' : 'GET';
+  return { url, method };
+}
+
+/**
+ * Fetches the data from the API.
+ * @param {object} requestOptions - The request options.
+ * @param {string} requestOptions.url - The URL to call.
+ * @param {string} requestOptions.method - The HTTP method.
+ * @param {string} apiKey - The API key.
+ * @return {Promise<Response>} - The response from the API.
+ */
+async function fetchData(requestOptions, apiKey) {
+  const { url, method } = requestOptions;
+
+  const options = {
+    method,
+    headers: {
+      'x-api-key': apiKey,
+    },
+  };
+
+  return fetch(createUrl(url), options);
+}
+
+/**
+ * Validates the required environment variables. Throws an error if any are missing.
+ * @param {object} env - The environment variables.
+ * @throws {Error} - If any required environment variables are missing.
+ */
+function validateConfiguration(env) {
+  if (!env.API_AUTH_KEY) {
+    throw new Error('Missing required environment variable: API_AUTH_KEY');
+  }
+  if (!env.API_BASE_URL) {
+    throw new Error('Missing required environment variable: API_BASE_URL');
+  }
+}
+
+/**
+ * The main function. This is the entry point for the action.
+ * It validates the configuration, parses the payload, creates the request options,
+ * and fetches the data.
+ * @param {Request} request - The request object.
+ * @param {UniversalContext} context - The context object.
+ * @return {Promise<Response>} - The response.
  */
 async function run(request, context) {
-  const { log, env } = context;
+  const { data: payload, env, log } = context;
 
-  const triggerUrls = parseAndValidateTriggerUrls(context);
-  if (!triggerUrls) {
-    return new Response('Error in TRIGGER_URLS configuration', { status: 500 });
+  try {
+    validateConfiguration(env);
+
+    const type = parsePayload(payload, log);
+    if (!validateType(type)) {
+      log.warn(`Invalid type: ${type}`);
+      return new Response('Invalid type', { status: 400 });
+    }
+
+    const requestOptions = createRequestOptions(type, env.API_BASE_URL);
+    const response = await fetchData(requestOptions, env.API_AUTH_KEY);
+    if (!response.ok) {
+      log.error(`Request failed: ${response.status}`, { statusText: response.statusText });
+      return new Response('', { status: 500 });
+    }
+
+    log.info('Request successful', { type, statusCode: response.status });
+    return new Response('', { status: 200 });
+  } catch (error) {
+    log.error(`Error in processing: ${error.message}`, error);
+    return new Response('Error in processing', { status: 500 });
   }
-
-  const apiKey = env.ADMIN_KEY;
-  if (!hasText(apiKey)) {
-    log.error('ADMIN_KEY environment variable is missing.');
-    return new Response('Missing ADMIN_KEY', { status: 500 });
-  }
-
-  const fetchPromises = triggerUrls.map((url) => fetch(url, {
-    method: 'GET',
-    headers: { 'x-api-key': apiKey },
-  }).then((response) => ({
-    url,
-    status: response.ok ? 'Success' : `Failed - HTTP status: ${response.status}`,
-  })).catch((error) => ({
-    url,
-    status: `Failed - Error: ${error.message}`,
-  })));
-
-  const results = await Promise.all(fetchPromises);
-
-  log.info('Endpoint call results:', results);
-  return new Response(JSON.stringify(results), { status: 200 });
 }
 
 export const main = wrap(run)

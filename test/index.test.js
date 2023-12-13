@@ -13,25 +13,28 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai';
-import sinon from 'sinon';
 import nock from 'nock';
+import sinon from 'sinon';
+import { main as lambdaFunction } from '../src/index.js';
 
-import { main } from '../src/index.js';
-
-describe('Lambda Function Tests', () => {
+describe('Audit Scheduler Tests', () => {
   let context;
+  let log;
+  let env;
 
   beforeEach(() => {
-    // Set up a fake context
+    log = {
+      info: sinon.spy(),
+      error: sinon.spy(),
+      warn: sinon.spy(),
+    };
+    env = {
+      API_AUTH_KEY: 'test-api-key',
+      API_BASE_URL: 'https://example.com/api',
+    };
     context = {
-      env: {
-        TRIGGER_URLS: JSON.stringify(['http://example.com', 'http://example.org']),
-        ADMIN_KEY: 'secret-api-key',
-      },
-      log: {
-        info: sinon.spy(),
-        error: sinon.spy(),
-      },
+      log,
+      env,
     };
   });
 
@@ -40,88 +43,115 @@ describe('Lambda Function Tests', () => {
     sinon.restore();
   });
 
-  it('calls all endpoints successfully', async () => {
-    nock('http://example.com').get('/').reply(200);
-    nock('http://example.org').get('/').reply(200);
+  it('successfully makes a GET request when type is valid and not test', async () => {
+    const payload = { type: 'cwv' };
+    context.data = JSON.stringify(payload);
+    nock(env.API_BASE_URL)
+      .get(`?type=${payload.type}&url=all`)
+      .reply(200);
 
-    const response = await main({ /* Request object */ }, context);
-    const results = await response.json();
+    const response = await lambdaFunction({ /* Request options */ }, context);
 
-    expect(context.log.info.calledOnce).to.be.true;
-    expect(results).to.be.an('array').that.has.lengthOf(2);
-    expect(results[0].status).to.equal('Success');
-    expect(results[1].status).to.equal('Success');
     expect(response.status).to.equal(200);
+    expect(log.info.calledWith('Request successful')).to.be.true;
   });
 
-  it('logs an error and returns a 500 response when TRIGGER_URLS is empty', async () => {
-    context.env.TRIGGER_URLS = JSON.stringify([]);
+  it('successfully makes an OPTIONS request when type is test', async () => {
+    const payload = { type: 'test' };
+    context.data = JSON.stringify(payload);
+    nock(env.API_BASE_URL)
+      .options('')
+      .reply(200);
 
-    const response = await main({ /* Request object */ }, context);
+    const response = await lambdaFunction({ /* Request options */ }, context);
 
-    expect(context.log.error.calledOnce).to.be.true;
-    expect(response.status).to.equal(500);
-  });
-
-  it('logs an error and returns a 500 response when TRIGGER_URLS is non-array', async () => {
-    context.env.TRIGGER_URLS = '"http://example.com"';
-
-    const response = await main({ /* Request object */ }, context);
-
-    expect(context.log.error.calledOnce).to.be.true;
-    expect(response.status).to.equal(500);
-  });
-
-  it('handles mixed success and failure of endpoints', async () => {
-    nock('http://example.com').get('/').reply(200);
-    nock('http://example.org').get('/').reply(400);
-
-    const response = await main({ /* Request object */ }, context);
-    const results = await response.json();
-
-    expect(context.log.info.calledOnce).to.be.true;
-    expect(results[0].status).to.equal('Success');
-    expect(results[1].status).to.include('Failed - HTTP status: 400');
     expect(response.status).to.equal(200);
+    expect(log.info.calledWith('Request successful')).to.be.true;
   });
 
-  it('handles invalid JSON in TRIGGER_URLS environment variable', async () => {
-    context.env.TRIGGER_URLS = 'invalid-json';
+  it('returns 400 for invalid type', async () => {
+    const payload = { type: 'invalid' };
+    context.data = JSON.stringify(payload);
 
-    const response = await main({ /* Request object */ }, context);
+    const response = await lambdaFunction({ /* Request options */ }, context);
 
-    expect(context.log.error.calledOnce).to.be.true;
+    expect(response.status).to.equal(400);
+    expect(log.warn.calledWith(`Invalid type: ${payload.type}`)).to.be.true;
+  });
+
+  it('returns 400 for non-object payload', async () => {
+    const payload = ['invalid'];
+    context.data = JSON.stringify(payload);
+
+    const response = await lambdaFunction({ /* Request options */ }, context);
+
+    expect(response.status).to.equal(400);
+    expect(log.error.calledWith('Invalid payload: invalid')).to.be.true;
+  });
+
+  it('returns 400 for empty payload', async () => {
+    const response = await lambdaFunction({ /* Request options */ }, context);
+
+    expect(response.status).to.equal(400);
+    expect(log.warn.calledWith('Invalid type: undefined')).to.be.true;
+  });
+
+  it('should return 400 for invalid payload', async () => {
+    context.data = 'invalid JSON';
+
+    const response = await lambdaFunction({ /* Request options */ }, context);
+
+    expect(response.status).to.equal(400);
+    expect(log.error.calledWithMatch('Error parsing payload')).to.be.true;
+  });
+
+  it('should throw an error if required environment variable API_AUTH_KEY is missing', async () => {
+    delete context.env.API_AUTH_KEY;
+    const payload = { type: 'cwv' };
+    context.data = JSON.stringify(payload);
+
+    const response = await lambdaFunction({ /* Request options */ }, context);
+
     expect(response.status).to.equal(500);
+    expect(log.error.calledWithMatch('Missing required environment variable: API_AUTH_KEY')).to.be.true;
   });
 
-  it('logs an error and returns a 500 response when TRIGGER_URLS contains invalid URLs', async () => {
-    context.env.TRIGGER_URLS = JSON.stringify(['http:// invalid-url']);
+  it('should throw an error if required environment variable API_BASE_URL is missing', async () => {
+    delete context.env.API_BASE_URL;
+    const payload = { type: 'cwv' };
+    context.data = JSON.stringify(payload);
 
-    const response = await main({ /* Request object */ }, context);
+    const response = await lambdaFunction({ /* Request options */ }, context);
 
-    expect(context.log.error.calledOnce).to.be.true;
     expect(response.status).to.equal(500);
+    expect(log.error.calledWithMatch('Missing required environment variable: API_BASE_URL')).to.be.true;
   });
 
-  it('logs an error and returns a 500 response when the API key is missing', async () => {
-    delete context.env.ADMIN_KEY;
+  it('handles fetch errors gracefully', async () => {
+    const payload = { type: 'cwv' };
+    context.data = JSON.stringify(payload);
+    nock(env.API_BASE_URL)
+      .get('')
+      .query(true)
+      .replyWithError('Test fetch error');
 
-    const response = await main({ /* Request object */ }, context);
+    const response = await lambdaFunction({ /* Request options */ }, context);
 
-    expect(context.log.error.calledOnce).to.be.true;
     expect(response.status).to.equal(500);
+    expect(log.error.calledWith('Error in processing: Test fetch error')).to.be.true;
   });
 
-  it('handles network errors gracefully', async () => {
-    nock('http://example.com').get('/').replyWithError('Network error');
-    nock('http://example.org').get('/').reply(200);
+  it('handles non-ok response', async () => {
+    const payload = { type: 'cwv' };
+    context.data = JSON.stringify(payload);
+    nock(env.API_BASE_URL)
+      .get('')
+      .query(true)
+      .reply(500, 'Test fetch error');
 
-    const response = await main({ /* Request object */ }, context);
-    const results = await response.json();
+    const response = await lambdaFunction({ /* Request options */ }, context);
 
-    expect(context.log.info.calledOnce).to.be.true;
-    expect(results[0].status).to.include('Failed - Error: Network error');
-    expect(results[1].status).to.equal('Success');
-    expect(response.status).to.equal(200);
+    expect(response.status).to.equal(500);
+    expect(log.error.calledWith('Request failed: 500')).to.be.true;
   });
 });
