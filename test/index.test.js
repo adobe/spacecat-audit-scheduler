@@ -33,6 +33,7 @@ describe('Audit Scheduler Tests', () => {
       API_BASE_URL: 'https://example.com/api',
     };
     context = {
+      invocation: {},
       log,
       env,
     };
@@ -45,7 +46,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('successfully makes a GET request when type is valid and not test', async () => {
     const payload = { type: 'cwv' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
     nock(env.API_BASE_URL)
       .get(`?type=${payload.type}&url=all`)
       .reply(200);
@@ -58,7 +59,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('successfully makes an OPTIONS request when type is test', async () => {
     const payload = { type: 'test' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
     nock(env.API_BASE_URL)
       .options('')
       .reply(200);
@@ -71,7 +72,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('returns 400 for invalid type', async () => {
     const payload = { type: 'invalid' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
 
     const response = await lambdaFunction({ /* Request options */ }, context);
 
@@ -81,7 +82,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('returns 400 for non-object payload', async () => {
     const payload = ['invalid'];
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
 
     const response = await lambdaFunction({ /* Request options */ }, context);
 
@@ -97,7 +98,7 @@ describe('Audit Scheduler Tests', () => {
   });
 
   it('should return 400 for invalid payload', async () => {
-    context.data = 'invalid JSON';
+    context.invocation.event = 'invalid JSON';
 
     const response = await lambdaFunction({ /* Request options */ }, context);
 
@@ -108,7 +109,7 @@ describe('Audit Scheduler Tests', () => {
   it('should throw an error if required environment variable API_AUTH_KEY is missing', async () => {
     delete context.env.API_AUTH_KEY;
     const payload = { type: 'cwv' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
 
     const response = await lambdaFunction({ /* Request options */ }, context);
 
@@ -119,7 +120,7 @@ describe('Audit Scheduler Tests', () => {
   it('should throw an error if required environment variable API_BASE_URL is missing', async () => {
     delete context.env.API_BASE_URL;
     const payload = { type: 'cwv' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
 
     const response = await lambdaFunction({ /* Request options */ }, context);
 
@@ -129,7 +130,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('handles fetch errors gracefully', async () => {
     const payload = { type: 'cwv' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
     nock(env.API_BASE_URL)
       .get('')
       .query(true)
@@ -143,7 +144,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('handles non-ok response', async () => {
     const payload = { type: 'cwv' };
-    context.data = JSON.stringify(payload);
+    context.invocation.event = JSON.stringify(payload);
     nock(env.API_BASE_URL)
       .get('')
       .query(true)

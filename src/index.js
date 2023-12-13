@@ -119,10 +119,8 @@ function validateConfiguration(env) {
  * @return {Promise<Response>} - The response.
  */
 async function run(request, context) {
-  const { data: payload, env, log } = context;
-
-  log.info(JSON.stringify(request));
-  log.info(JSON.stringify(context));
+  const { invocation, env, log } = context;
+  const { event: payload } = invocation;
 
   try {
     validateConfiguration(env);
