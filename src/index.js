@@ -38,24 +38,18 @@ function validateType(type) {
 }
 
 /**
- * Parses the payload and returns the type. If the payload is invalid,
+ * Gets the event type from the event. If the event is not an object,
  * then null is returned.
- * @param {string} rawPayload - The request body.
+ * @param {objects} event - The event from the event.
  * @param {object} log - The logger.
- * @return {string|null} - The type if the payload is valid, null otherwise.
+ * @return {string|null} - The type if the event is valid, null otherwise.
  */
-function parsePayload(rawPayload, log) {
-  try {
-    const payload = JSON.parse(rawPayload || '{}');
-    if (!isObject(payload)) {
-      log.error(`Invalid payload: ${payload}`);
-      return null;
-    }
-    return payload.type;
-  } catch (error) {
-    log.error(`Error parsing payload: ${error.message}`);
+function getTypeFromEvent(event, log) {
+  if (!isObject(event)) {
+    log.error(`Invalid payload: ${event}`);
     return null;
   }
+  return event.type;
 }
 
 /**
@@ -120,12 +114,12 @@ function validateConfiguration(env) {
  */
 async function run(request, context) {
   const { invocation, env, log } = context;
-  const { event: payload } = invocation;
+  const { event } = invocation;
 
   try {
     validateConfiguration(env);
 
-    const type = parsePayload(payload, log);
+    const type = getTypeFromEvent(event, log);
     if (!validateType(type)) {
       log.warn(`Invalid type: ${type}`);
       return new Response('Invalid type', { status: 400 });
