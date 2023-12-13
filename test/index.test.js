@@ -48,7 +48,7 @@ describe('Audit Scheduler Tests', () => {
     const event = { type: 'cwv' };
     context.invocation.event = event;
     nock(env.API_BASE_URL)
-      .get(`?type=${event.type}&url=all`)
+      .get(`/trigger?type=${event.type}&url=all`)
       .reply(200);
 
     const response = await lambdaFunction({ /* Request options */ }, context);
@@ -58,8 +58,7 @@ describe('Audit Scheduler Tests', () => {
   });
 
   it('successfully makes an OPTIONS request when type is test', async () => {
-    const event = { type: 'test' };
-    context.invocation.event = event;
+    context.invocation.event = { type: 'test' };
     nock(env.API_BASE_URL)
       .options('')
       .reply(200);
@@ -117,8 +116,7 @@ describe('Audit Scheduler Tests', () => {
 
   it('should throw an error if required environment variable API_BASE_URL is missing', async () => {
     delete context.env.API_BASE_URL;
-    const event = { type: 'cwv' };
-    context.invocation.event = event;
+    context.invocation.event = { type: 'cwv' };
 
     const response = await lambdaFunction({ /* Request options */ }, context);
 
@@ -129,7 +127,7 @@ describe('Audit Scheduler Tests', () => {
   it('handles fetch errors gracefully', async () => {
     context.invocation.event = { type: 'cwv' };
     nock(env.API_BASE_URL)
-      .get('')
+      .get('/trigger')
       .query(true)
       .replyWithError('Test fetch error');
 
@@ -142,7 +140,7 @@ describe('Audit Scheduler Tests', () => {
   it('handles non-ok response', async () => {
     context.invocation.event = { type: 'cwv' };
     nock(env.API_BASE_URL)
-      .get('')
+      .get('/trigger')
       .query(true)
       .reply(500, 'Test fetch error');
 
