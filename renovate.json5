@@ -1,0 +1,21 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'local>adobe-rnd/spacecat-audit-scheduler'
+  ],
+  packageRules: [
+    {
+      packageNames: [
+        '@semantic-release/npm'
+      ],
+      allowedVersions: '<10.0'
+    },
+    {
+      // https://github.com/iambumblehead/esmock/issues/260
+      packageNames: [
+        'esmock'
+      ],
+      allowedVersions: '2.5.1'
+    }
+  ]
+}
