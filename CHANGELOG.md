@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.1.0...v1.1.1) (2024-01-09)
+
+
+### Bug Fixes
+
+* renovate ([9780648](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/9780648da564db47845501079725e8bf7ae4ba95))
+
 # [1.1.0](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.0.0...v1.1.0) (2023-12-13)
 
 
