@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.1.2...v1.1.3) (2024-01-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared-secrets to v2.2.2 ([#25](https://github.com/adobe-rnd/spacecat-audit-scheduler/issues/25)) ([5ba401f](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/5ba401f23e0ba2053d591ab9b63e0eeecac8a1ac))
+
 ## [1.1.2](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.1.1...v1.1.2) (2024-01-12)
 
 
