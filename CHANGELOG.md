@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.1.3...v1.2.0) (2024-01-19)
+
+
+### Features
+
+* apex type ([#29](https://github.com/adobe-rnd/spacecat-audit-scheduler/issues/29)) ([afe2cbe](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/afe2cbe06b9d20774a201692c7e841f1b67b45db))
+
 ## [1.1.3](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.1.2...v1.1.3) (2024-01-15)
 
 
