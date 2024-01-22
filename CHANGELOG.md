@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.2.0...v1.3.0) (2024-01-22)
+
+
+### Features
+
+* add broken-backlinks audit type (SITES-18417) ([#27](https://github.com/adobe-rnd/spacecat-audit-scheduler/issues/27)) ([9fec401](https://github.com/adobe-rnd/spacecat-audit-scheduler/commit/9fec401c95b079d4ef8c81b9ba4154aa277a4cd1)), closes [adobe/spacecat-audit-worker#77](https://github.com/adobe/spacecat-audit-worker/issues/77) [adobe/spacecat-audit-post-processor#37](https://github.com/adobe/spacecat-audit-post-processor/issues/37)
+
 # [1.2.0](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.1.3...v1.2.0) (2024-01-19)
 
 
