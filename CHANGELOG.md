@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.3.0...v1.3.1) (2024-01-23)
+
+
+### Bug Fixes
+
+* update to node 20, deps ([#32](https://github.com/adobe/spacecat-audit-scheduler/issues/32)) ([5f31b3e](https://github.com/adobe/spacecat-audit-scheduler/commit/5f31b3eff4c96b2cc3bf44d73e486a866b5de7b7))
+
 # [1.3.0](https://github.com/adobe-rnd/spacecat-audit-scheduler/compare/v1.2.0...v1.3.0) (2024-01-22)
 
 
