@@ -1,6 +1,6 @@
 {
   "name": "@adobe/spacecat-audit-scheduler",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "SpaceCat Audit Scheduler",
   "main": "src/index.js",
   "type": "module",
