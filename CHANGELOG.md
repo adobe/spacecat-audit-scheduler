@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.3.4...v1.4.0) (2024-02-06)
+
+
+### Features
+
+* add organic traffic audit type (SITES-18661) ([#54](https://github.com/adobe/spacecat-audit-scheduler/issues/54)) ([3e7fc33](https://github.com/adobe/spacecat-audit-scheduler/commit/3e7fc3393cbb59ae088f96139048b261a3bf1e4f))
+
 ## [1.3.4](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.3.3...v1.3.4) (2024-02-02)
 
 
