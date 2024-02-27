@@ -1,3 +1,10 @@
+## [1.4.8](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.4.7...v1.4.8) (2024-02-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/spacecat-shared-utils to v1.12.2 ([#72](https://github.com/adobe/spacecat-audit-scheduler/issues/72)) ([d330724](https://github.com/adobe/spacecat-audit-scheduler/commit/d3307244998f213f86a8aca4db6de660a3f9e345))
+
 ## [1.4.7](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.4.6...v1.4.7) (2024-02-26)
 
 
