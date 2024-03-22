@@ -21,7 +21,7 @@ import {
 import secrets from '@adobe/helix-shared-secrets';
 import { isObject, resolveSecretsName } from '@adobe/spacecat-shared-utils';
 
-const SUPPORTED_TYPES = ['apex', 'broken-backlinks', 'organic-traffic', 'cwv', '404', 'lhs', 'test', 'sitemap'];
+const SUPPORTED_TYPES = ['apex', 'broken-backlinks', 'organic-traffic', 'cwv', '404', 'lhs', 'test', 'sitemap', 'experimentation'];
 
 /* c8 ignore next 3 */
 export const { fetch } = process.env.HELIX_FETCH_FORCE_HTTP1
