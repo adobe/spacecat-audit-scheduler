@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.4.12...v1.5.0) (2024-03-22)
+
+
+### Features
+
+* experimentation type ([#87](https://github.com/adobe/spacecat-audit-scheduler/issues/87)) ([a958416](https://github.com/adobe/spacecat-audit-scheduler/commit/a9584161e562d7ec58a21e02fb020a22d4566968))
+
 ## [1.4.12](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.4.11...v1.4.12) (2024-03-19)
 
 
