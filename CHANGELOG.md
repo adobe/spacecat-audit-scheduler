@@ -1,3 +1,10 @@
+## [1.5.6](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.5.5...v1.5.6) (2024-06-07)
+
+
+### Bug Fixes
+
+* **deps:** update adobe fixes ([#122](https://github.com/adobe/spacecat-audit-scheduler/issues/122)) ([f49c80c](https://github.com/adobe/spacecat-audit-scheduler/commit/f49c80c6bda79fc7a640bb3db2ce41eb6eb52806))
+
 ## [1.5.5](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.5.4...v1.5.5) (2024-06-01)
 
 
