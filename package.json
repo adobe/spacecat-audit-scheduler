@@ -55,11 +55,11 @@
     "@adobe/helix-shared-wrap": "2.0.2",
     "@adobe/helix-status": "10.1.2",
     "@adobe/helix-universal-logger": "3.0.18",
-    "@adobe/spacecat-shared-utils": "1.15.7"
+    "@adobe/spacecat-shared-utils": "1.15.8"
   },
   "devDependencies": {
     "@adobe/eslint-config-helix": "2.0.6",
-    "@adobe/helix-deploy": "11.1.10",
+    "@adobe/helix-deploy": "11.1.11",
     "@adobe/helix-universal": "4.5.2",
     "@adobe/semantic-release-coralogix": "1.1.31",
     "@adobe/semantic-release-skms-cmr": "1.1.2",
