@@ -1,3 +1,10 @@
+## [1.5.18](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.5.17...v1.5.18) (2024-09-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-universal-logger to v3.0.19 ([#172](https://github.com/adobe/spacecat-audit-scheduler/issues/172)) ([240b7b7](https://github.com/adobe/spacecat-audit-scheduler/commit/240b7b76960fd3c57fa49e4881e2a6f62c795e0b))
+
 ## [1.5.17](https://github.com/adobe/spacecat-audit-scheduler/compare/v1.5.16...v1.5.17) (2024-08-20)
 
 
